@@ -41,11 +41,15 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", project.version
-    inputs.property "minecraft_version_range", project.minecraft_version_range
+    // Capture plain values during configuration; copy actions run later.
+    def resourceProperties = [
+        version: project.version.toString(),
+        minecraft_version_range: project.minecraft_version_range.toString()
+    ]
+    inputs.properties(resourceProperties)
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version, "minecraft_version_range": project.minecraft_version_range
+        expand resourceProperties
     }
 }
 
@@ -62,8 +66,9 @@ java {
 }
 
 jar {
+    def licenseSuffix = project.base.archivesName.get()
     from("LICENSE") {
-        rename { "${it}_${project.base.archivesName.get()}"}
+        rename { "${it}_${licenseSuffix}"}
     }
 }
 
