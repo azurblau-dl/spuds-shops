@@ -1,48 +1,15 @@
 package net.spudacious5705.shops.screen.networking;
-
-
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.handling.DirectionalPayloadHandler;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
-
-import static net.spudacious5705.shops.SpudaciousShops.MOD_ID;
-
-@EventBusSubscriber(modid = MOD_ID)
-public class NetworkHelper {
-
-    private static final String PROTOCOL_VERSION = "1.0";
-
-    @SubscribeEvent // on the mod event bus
-    public static void register(final RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar reg = event.registrar(PROTOCOL_VERSION);
-        reg.playBidirectional(
-                ShopTabSyncPkt.TYPE,
-                ShopTabSyncPkt.STREAM_CODEC,
-                new DirectionalPayloadHandler<>(
-                        ShopTabSyncPkt::handleClientSide,
-                        ShopTabSyncPkt::handleServerSide
-                )
-        );
-
-        reg.playBidirectional(
-                ToggleSyncPkt.TYPE,
-                ToggleSyncPkt.STREAM_CODEC,
-                new DirectionalPayloadHandler<>(
-                        ToggleSyncPkt::handleClientSide,
-                        ToggleSyncPkt::handleServerSide
-                )
-        );
-
-        reg.playToServer(
-                ShopSelfDemotePkt.TYPE,
-                ShopSelfDemotePkt.STREAM_CODEC,
-                ShopSelfDemotePkt::handle
-        );
-
-
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+public final class NetworkHelper {
+    public static void register() {
+        PayloadTypeRegistry.serverboundPlay().register(ShopTabSyncPkt.TYPE, ShopTabSyncPkt.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ShopTabSyncPkt.TYPE, ShopTabSyncPkt.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ToggleSyncPkt.TYPE, ToggleSyncPkt.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ToggleSyncPkt.TYPE, ToggleSyncPkt.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ShopSelfDemotePkt.TYPE, ShopSelfDemotePkt.STREAM_CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(ShopTabSyncPkt.TYPE, ShopTabSyncPkt::handleServerSide);
+        ServerPlayNetworking.registerGlobalReceiver(ToggleSyncPkt.TYPE, ToggleSyncPkt::handleServerSide);
+        ServerPlayNetworking.registerGlobalReceiver(ShopSelfDemotePkt.TYPE, ShopSelfDemotePkt::handle);
     }
-
-
 }

@@ -10,7 +10,8 @@ public class ShopItem extends BlockItem {
 
 
     public ShopItem(AngledShopBlock block, Properties properties, Colour colour) {
-        super(block, properties);
+        // Cushion variants share the base block's translated name, but keep their own item/model IDs.
+        super(block, properties.overrideDescription(block.getDescriptionId()));
         this.colour = colour;
     }
 

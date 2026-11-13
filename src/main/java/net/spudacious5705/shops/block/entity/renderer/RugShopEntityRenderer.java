@@ -3,7 +3,7 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -12,7 +12,7 @@ import net.spudacious5705.shops.block.entity.RugShopEntity;
 import static net.minecraft.util.Mth.clamp;
 
 
-public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>, ShopRenderUtils {
+public class RugShopEntityRenderer extends RecordedShopRenderer<RugShopEntity> implements ShopRenderUtils {
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -22,11 +22,11 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
 
 
     @Override
-    public void render(RugShopEntity shop, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+    public void render(RugShopEntity shop, float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay) {
         ItemDisplayContext mode;
         final RugShopEntity.RendererData data = shop.rendererData();
         final RugShopEntity.RugRenderData furtherData = shop.furtherData();
-        Font font = this.context.getFont();
+        Font font = this.context.font();
         if(data == null){
             return;
         }
@@ -106,14 +106,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
 
             matrices.scale(0.8f, 0.8f, 0.8f);
 
-            this.context.getItemRenderer().render(data.displayItem(), mode,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.displayItem(), mode, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
 
             //render price (count of currency)
@@ -124,7 +117,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
             float textSize = data.useSmallTextPrice()?0.012f:0.019f;
             matrices.scale(textSize, textSize, textSize);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -144,7 +137,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
             matrices.mulPose(Axis.XP.rotationDegrees(90f));
             matrices.scale(textSize, textSize, textSize);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -169,7 +162,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
             textSize = data.useSmallTextProduct()?0.012f:0.019f;
             matrices.scale(textSize, textSize, textSize);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.stockQuantity,
                     data.qWidth(),
                     -4f,
@@ -188,7 +181,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
             matrices.mulPose(Axis.XP.rotationDegrees(90f));
             matrices.scale(textSize, textSize, textSize);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.stockQuantity,
                     data.qWidth(),
                     -4f,
@@ -227,14 +220,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
             }
             matrices.scale(scale, scale, scale);
 
-            this.context.getItemRenderer().render(data.paymentItem(), mode,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.paymentItem(), mode, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
 
             matrices.pushPose();
@@ -249,14 +235,7 @@ public class RugShopEntityRenderer implements BlockEntityRenderer<RugShopEntity>
             }
             matrices.scale(scale, scale, scale);
 
-            this.context.getItemRenderer().render(data.paymentItem(), mode,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.paymentItem(), mode, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
             matrices.popPose();
 

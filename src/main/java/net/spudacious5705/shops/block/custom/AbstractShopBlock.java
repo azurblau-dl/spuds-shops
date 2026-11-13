@@ -9,7 +9,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
+
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -43,8 +43,8 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractShopBlock extends Block implements EntityBlock {
 
-    public static final DirectionProperty FACING =
-            DirectionProperty.create("facing", Direction.Plane.HORIZONTAL);
+    public static final EnumProperty<Direction> FACING =
+            EnumProperty.create("facing", Direction.class, Direction.Plane.HORIZONTAL);
 
     public static final BooleanProperty BREAKABLE = ModProperties.BREAKABLE;
     private static final VoxelShape TEST_SHAPE = Block.box(0, 0, 0, 16, 10, 16);
@@ -121,8 +121,8 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
 
         if (shop.isUnbreakable(player)) {
             level.setBlock(pos, state.setValue(BREAKABLE, false), 3);
-            if (level.isClientSide) {
-                player.displayClientMessage(shop.cantBreakMessage(), true);
+            if (level.isClientSide()) {
+                player.sendOverlayMessage(shop.cantBreakMessage());
             }
             return;
         }
@@ -152,19 +152,19 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
     }
 
     @Override
-    protected @NotNull ItemInteractionResult useItemOn(
+    protected @NotNull InteractionResult useItemOn(
             ItemStack stack, @NotNull BlockState state,
             @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player,
             @NotNull InteractionHand hand, @NotNull BlockHitResult hit
     ) {
-        if (stack.isEmpty()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (stack.isEmpty()) return InteractionResult.TRY_WITH_EMPTY_HAND;
 
         PermissionLevel perm = userSignIn(level, pos, player);
         if (perm.canEditTrades()) {
-            if (onUseWithItem(stack, state, level, pos, player)) return ItemInteractionResult.SUCCESS;
+            if (onUseWithItem(stack, state, level, pos, player)) return InteractionResult.SUCCESS;
         }
 
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
     }
 
     @Override
@@ -181,12 +181,7 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
 
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.openMenu(
-                    shop.createScreenHandlerFactory(false),
-                    buf -> {
-                        buf.writeBlockPos(pos);//friendlyByteBuff formation here
-                        buf.writeBoolean(false);//ignore this false value. it's meant to be there
-                    }
-            );
+                    shop.createScreenHandlerFactory(false));
         }
 
 
@@ -211,31 +206,8 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
     }
 
     @Override
-    public void onRemove(
-            @NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos,
-            @NotNull BlockState newState, boolean isMoving
-    ) {
-        if (isStateReplacedValid(newState)) {
-            return;
-        }
-
-        BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof AbstractShopEntity shopEntity) {
-            if (!state.getValue(BREAKABLE)) {
-                level.setBlock(pos, state, 3);
-                return;
-            }
-            shopEntity.itemScatter(level, pos);
-            level.updateNeighbourForOutputSignal(pos, this);
-        }
-        level.removeBlockEntity(pos);
-        super.onRemove(state, level, pos, newState, isMoving);
-    }
-
-    @Override
     public @NotNull BlockState rotate(
-            BlockState state, @NotNull LevelAccessor level,
-            @NotNull BlockPos pos, Rotation direction
+            BlockState state, Rotation direction
     ) {
         return state.setValue(FACING, direction.rotate(state.getValue(FACING)));
     }
@@ -263,7 +235,7 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
 
     @Override
     public @NotNull VoxelShape getOcclusionShape(
-            @NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos
+            @NotNull BlockState state
     ) {
         return getGenericShape(state);
     }
@@ -275,6 +247,11 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
 
     protected abstract boolean isStateReplacedValid(BlockState newState);
 
+    @Override
+    protected boolean shouldChangedStateKeepBlockEntity(BlockState oldState) {
+        return isStateReplacedValid(oldState);
+    }
+
     protected abstract boolean onUseWithItem(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player);
 
 
@@ -282,29 +259,6 @@ public abstract class AbstractShopBlock extends Block implements EntityBlock {
     public abstract <T extends BlockEntity> BlockEntityTicker<T> getTicker(
             @NotNull Level world, @NotNull BlockState state, @NotNull BlockEntityType<T> type
     );
-
-    @Override
-    public boolean onDestroyedByPlayer(
-            @NotNull BlockState state, Level world, @NotNull BlockPos pos,
-            @NotNull Player player, boolean willHarvest, @NotNull FluidState fluid
-    ) {
-        BlockEntity be = world.getBlockEntity(pos);
-        if (be instanceof AbstractShopEntity shop) {
-            if (shop.isUnbreakable(player)) {
-                if (world.isClientSide) {
-                    player.displayClientMessage(shop.cantBreakMessage(), true);
-                }
-                return false; // cancel destruction
-            }
-        }
-
-        if (player.isCreative()) {
-            world.setBlock(pos, state.setValue(BREAKABLE, true), 3); // allow creative break
-        }
-
-        return super.onDestroyedByPlayer(state, world, pos, player, willHarvest, fluid);
-    }
-
 
     public ScreenSettingsGroup getScreenSettings() {
         return ScreenSettingsGroup.createBasicWood(VariantResources.wood_variant.OAK);

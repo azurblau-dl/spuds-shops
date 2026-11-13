@@ -3,13 +3,13 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.spudacious5705.shops.block.entity.CrateShopEntity;
 
-public class CrateShopEntityRenderer implements BlockEntityRenderer<CrateShopEntity>, ShopRenderUtils {
+public class CrateShopEntityRenderer extends RecordedShopRenderer<CrateShopEntity> implements ShopRenderUtils {
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -50,10 +50,10 @@ public class CrateShopEntityRenderer implements BlockEntityRenderer<CrateShopEnt
     };
 
     @Override
-    public void render(CrateShopEntity shop, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+    public void render(CrateShopEntity shop, float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay) {
         ItemDisplayContext mode;
         final CrateShopEntity.RendererData data = shop.rendererData();
-        Font font = this.context.getFont();
+        Font font = this.context.font();
         if(data == null){
             return;
         }
@@ -114,14 +114,7 @@ public class CrateShopEntityRenderer implements BlockEntityRenderer<CrateShopEnt
                 matrices.mulPose(Axis.YP.rotationDegrees(i.ry));
                 matrices.mulPose(Axis.XP.rotationDegrees(i.rx+rotationXbonus));
                 matrices.scale(scaleFactorX, scaleFactorY, scaleFactorZ);
-                this.context.getItemRenderer().render(data.displayItem(), mode,
-                        false,
-                        matrices,
-                        vertexConsumers,
-                        light,
-                        overlay,
-                        this.context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-                );
+                RenderCommands.item(context, data.displayItem(), mode, false, matrices, vertexConsumers, light, overlay);
                 matrices.popPose();
             }
 
@@ -138,7 +131,7 @@ public class CrateShopEntityRenderer implements BlockEntityRenderer<CrateShopEnt
             float textSize = data.useSmallTextPrice()?0.014f:0.018f;
             matrices.scale(textSize, textSize, textSize);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -165,7 +158,7 @@ public class CrateShopEntityRenderer implements BlockEntityRenderer<CrateShopEnt
             textSize = data.useSmallTextProduct()?0.021f:0.024f;
             matrices.scale(textSize, textSize, textSize);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.stockQuantity,
                     data.qWidth(),
                     -4f,
@@ -190,15 +183,7 @@ public class CrateShopEntityRenderer implements BlockEntityRenderer<CrateShopEnt
 
             matrices.scale(0.18f, 0.18f, 0.18f);
             
-            this.context.getItemRenderer().render(data.paymentItem(),
-                    ItemDisplayContext.GUI,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
             matrices.popPose();
 

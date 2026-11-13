@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
 
-import static net.spudacious5705.shops.block.ModBlocks.settingsCarpet;
+
 
 
 public class RugShopBlock extends AbstractShopBlock{
@@ -49,8 +49,8 @@ public class RugShopBlock extends AbstractShopBlock{
     public Item CARPET;
     public final String COLOUR;
 
-    public RugShopBlock(PostRegAssigner<Item> carpetAssigner, String colour) {
-        super(settingsCarpet);
+    public RugShopBlock(net.minecraft.world.level.block.state.BlockBehaviour.Properties properties, PostRegAssigner<Item> carpetAssigner, String colour) {
+        super(properties);
         carpetAssigner.assignTo(o -> CARPET = o);
         COLOUR = colour;
     }
@@ -127,7 +127,7 @@ public class RugShopBlock extends AbstractShopBlock{
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
         if(ModBlockEntities.RUG_SHOP_ENTITY.get() == type) {
-            return level.isClientSide
+            return level.isClientSide()
                     ? (lvl, pos, st, be) -> ((RugShopEntity)be).renderTick()
                     : (lvl, pos, st, be) -> ((RugShopEntity)be).serverTick((ServerLevel) lvl, pos,  st);
 
@@ -163,7 +163,7 @@ public class RugShopBlock extends AbstractShopBlock{
 
 
     @Override
-    public @NotNull BlockState rotate(BlockState state, @NotNull LevelAccessor level, @NotNull BlockPos pos, Rotation direction) {
+    public @NotNull BlockState rotate(BlockState state, Rotation direction) {
         return state;
     }
 
@@ -173,7 +173,7 @@ public class RugShopBlock extends AbstractShopBlock{
     }
 
     @Override
-    public @NotNull BlockState updateShape(@NotNull BlockState state, Direction direction, @NotNull BlockState neighborState, @NotNull LevelAccessor pLevel, @NotNull BlockPos pos, @NotNull BlockPos neighborPos) {
+    public @NotNull BlockState updateShape(@NotNull BlockState state, net.minecraft.world.level.LevelReader pLevel, net.minecraft.world.level.ScheduledTickAccess ticks, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, net.minecraft.util.RandomSource random) {
 
         BooleanProperty CONNECTION = switch(direction){
             case NORTH -> CONNECTED_NORTH;

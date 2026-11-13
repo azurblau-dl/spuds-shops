@@ -112,7 +112,7 @@ public class ShelfShopBlock extends AbstractShopBlock{
 
         if (player != null) {
             Vec3 lookVec = player.getLookAngle();
-            Arrays.sort(horizontalDirections, Comparator.comparingDouble(dir -> -lookVec.dot(Vec3.atLowerCornerOf(dir.getNormal()))));
+            Arrays.sort(horizontalDirections, Comparator.comparingDouble(dir -> -lookVec.dot(Vec3.atLowerCornerOf(dir.getUnitVec3i()))));
         }
 
         for (Direction direction : horizontalDirections) {
@@ -182,7 +182,7 @@ public class ShelfShopBlock extends AbstractShopBlock{
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
         if(ModBlockEntities.SHELF_SHOP_ENTITY.get() == type) {
-            return level.isClientSide
+            return level.isClientSide()
                     ? (lvl, pos, st, be) -> ((ShelfShopEntity)be).renderTick()
                     : (lvl, pos, st, be) -> ((ShelfShopEntity)be).serverTick((ServerLevel) lvl, pos,  st);
 
@@ -191,7 +191,7 @@ public class ShelfShopBlock extends AbstractShopBlock{
     }
 
    @Override
-    public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState state, @NotNull BlockGetter level, @NotNull BlockPos pos){return CULLING_SHAPE;}
+    public @NotNull VoxelShape getOcclusionShape(@NotNull BlockState state){return CULLING_SHAPE;}
 
     @Override
     protected VoxelShape getGenericShape(BlockState state) {
@@ -217,7 +217,7 @@ public class ShelfShopBlock extends AbstractShopBlock{
 
     @Override
     protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hitResult) {
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
 
         BlockEntity be = level.getBlockEntity(pos);
 
@@ -226,11 +226,7 @@ public class ShelfShopBlock extends AbstractShopBlock{
 
         if (player instanceof ServerPlayer serverPlayer) {
             boolean openTop = hitResult.getLocation().y - pos.getY() > 0.5;
-            serverPlayer.openMenu(shop.createScreenHandlerFactory(openTop),
-                    buf -> {
-                        buf.writeBlockPos(pos);
-                        buf.writeBoolean(openTop);
-                    });
+            serverPlayer.openMenu(shop.createScreenHandlerFactory(openTop));
         }
 
 

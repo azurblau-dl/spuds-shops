@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -27,12 +27,12 @@ public class ContractScroll extends Item {
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level world, Player user, @NotNull InteractionHand hand) {
+    public @NotNull InteractionResult use(@NotNull Level world, Player user, @NotNull InteractionHand hand) {
 
         ItemStack stack = user.getItemInHand(hand);
 
         if (isSigned(stack)) {
-            return InteractionResultHolder.pass(stack);
+            return InteractionResult.PASS;
         }
 
         writeData(stack,user);
@@ -40,7 +40,7 @@ public class ContractScroll extends Item {
         BlockPos pos = user.getOnPos();
         world.playSound(user, pos.getX(),pos.getY(),pos.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f,1f);
 
-        return InteractionResultHolder.success(stack);
+        return InteractionResult.SUCCESS;
     }
 
     public static void writeData(ItemStack stack, Player user){
@@ -54,7 +54,7 @@ public class ContractScroll extends Item {
         CompoundTag nbt = new CompoundTag();
 
         nbt.putString(NBTname, name);
-        nbt.putUUID(NBTuuid, uuid);
+        nbt.store(NBTuuid, net.minecraft.core.UUIDUtil.CODEC, uuid);
 
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
 
@@ -78,7 +78,7 @@ public class ContractScroll extends Item {
         CustomData data = stack.get(DataComponents.CUSTOM_DATA);
         if (data != null) {
             CompoundTag tag = data.copyTag();
-            return tag.getUUID(NBTuuid);
+            return tag.read(NBTuuid, net.minecraft.core.UUIDUtil.CODEC).orElse(null);
         }
         return null;
     }
@@ -86,12 +86,12 @@ public class ContractScroll extends Item {
     @Override
     public void appendHoverText(
             ItemStack stack, @NotNull TooltipContext context,
-            @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+            net.minecraft.world.item.component.TooltipDisplay display, @NotNull java.util.function.Consumer<Component> tooltip, @NotNull TooltipFlag flag) {
         CustomData data = stack.get(DataComponents.CUSTOM_DATA);
         if (data != null) {
             CompoundTag tag = data.copyTag();
-            if(tag.hasUUID(NBTuuid)) {
-                tooltip.add(Component.literal("Signed by - " + tag.getString(NBTname)));
+            if(tag.read(NBTuuid, net.minecraft.core.UUIDUtil.CODEC).isPresent()) {
+                tooltip.accept(Component.literal("Signed by - " + tag.getStringOr(NBTname, "")));
             }
         }
     }

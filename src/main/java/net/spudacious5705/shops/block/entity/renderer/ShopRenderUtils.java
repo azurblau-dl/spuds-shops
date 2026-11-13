@@ -3,7 +3,7 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -15,11 +15,11 @@ import static net.spudacious5705.shops.block.entity.renderer.ShopIconModels.REG_
 
 public interface ShopRenderUtils {
 
-    static void renderShopWarns(float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay, final RendererData data, BlockEntityRendererProvider.Context context, float yOffset) {
+    static void renderShopWarns(float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay, final RendererData data, BlockEntityRendererProvider.Context context, float yOffset) {
         renderShopWarns(tickDelta, matrices, vertexConsumers, light, overlay, data, context, yOffset, 0.5f);
     }
 
-    static void renderShopWarns(float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay, final RendererData data, BlockEntityRendererProvider.Context context, float yOffset, float scale) {
+    static void renderShopWarns(float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay, final RendererData data, BlockEntityRendererProvider.Context context, float yOffset, float scale) {
         if(data.shopFunctional() && data.renderIcons()) {
             if (data.stockWarning || data.paymentWarning) {
 
@@ -55,43 +55,15 @@ public interface ShopRenderUtils {
 
                     matrices.translate(0.5f, 0.0f, 0.0f);
 
-                    context.getItemRenderer().render(NO_STOCK, ItemDisplayContext.GUI,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(NO_STOCK, null, null, 0)
-                    );
+                    RenderCommands.item(context, NO_STOCK, ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
                     matrices.translate(-1.0f, 0.0f, 0.0f);
-                    context.getItemRenderer().render(REG_FULL, ItemDisplayContext.GUI,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(REG_FULL, null, null, 0)
-                    );
+                    RenderCommands.item(context, REG_FULL, ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
                 } else if (data.stockWarning) {
-                    context.getItemRenderer().render(NO_STOCK, ItemDisplayContext.GUI,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(NO_STOCK, null, null, 0)
-                    );
+                    RenderCommands.item(context, NO_STOCK, ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
                 } else {
-                    context.getItemRenderer().render(REG_FULL, ItemDisplayContext.GUI,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(REG_FULL, null, null, 0)
-                    );
+                    RenderCommands.item(context, REG_FULL, ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
                 }
             }

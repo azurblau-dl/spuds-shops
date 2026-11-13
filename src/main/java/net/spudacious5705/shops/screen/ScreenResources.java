@@ -2,10 +2,10 @@ package net.spudacious5705.shops.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.intellij.lang.annotations.MagicConstant;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class ScreenResources {
 
     public static final int DEFAULT_TEXT_COLOUR = 11141290;
 
-    public static final ResourceLocation WARNING_TEXTURE = id("textures/gui/warning_screen.png");
+    public static final Identifier WARNING_TEXTURE = id("textures/gui/warning_screen.png");
 
     public static final MutableComponent OWNER = Component.translatable("gui.spudaciousshops.owner");
     public static final MutableComponent MANAGER = Component.translatable("gui.spudaciousshops.manager");
@@ -53,7 +53,7 @@ public class ScreenResources {
     public static final MutableComponent PAYMENT = Component.translatable("gui.spudaciousshops.payment");
     public static final MutableComponent PRODUCT = Component.translatable("gui.spudaciousshops.product");
 
-    public static final ResourceLocation NOTIFICATION_ICON = id("textures/gui/notification.png");
+    public static final Identifier NOTIFICATION_ICON = id("textures/gui/notification.png");
 
     public static final List<Component> PRODUCT_NBT_UNCHECKED_WARN = List.of(
             Component.translatable("gui.spudaciousshops.nbt_unchecked_warn_header"),
@@ -126,7 +126,7 @@ public class ScreenResources {
         return texts;
     }
 
-    public static void renderWarnPopupTextBody(GuiGraphics context, Font font, int screenX, int screenY){
+    public static void renderWarnPopupTextBody(GuiGraphicsExtractor context, Font font, int screenX, int screenY){
 
         int textX = screenX+110;
         int textY = screenY+84;
@@ -137,7 +137,7 @@ public class ScreenResources {
         renderCentredText(context, font, WARN_LINE_2, textX,textY,986895, false);
     }
 
-    public static void renderStorageHeaders(GuiGraphics context, Font font, int screenX, int screenY){
+    public static void renderStorageHeaders(GuiGraphicsExtractor context, Font font, int screenX, int screenY){
 
         renderText(context, font, STOCK,screenX+77,screenY+5,2434341, false);
 
@@ -149,12 +149,12 @@ public class ScreenResources {
 
     }
 
-    public static void renderCentredText(GuiGraphics context, Font font, MutableComponent text, int x, int y, int colour, boolean shadow){
-        context.drawString(font, text, x - font.width(text) / 2, y, colour, shadow);
+    public static void renderCentredText(GuiGraphicsExtractor context, Font font, MutableComponent text, int x, int y, int colour, boolean shadow){
+        context.text(font, text, x - font.width(text) / 2, y, colour | 0xFF000000, shadow);
     }
 
-    static void renderText(GuiGraphics context, Font font, MutableComponent text, int x, int y, int colour, boolean shadow){
-        context.drawString(font, text, x, y, colour, shadow);
+    static void renderText(GuiGraphicsExtractor context, Font font, MutableComponent text, int x, int y, int colour, boolean shadow){
+        context.text(font, text, x, y, colour, shadow);
     }
 
     public static class ToolTipText{
@@ -188,18 +188,18 @@ public class ScreenResources {
             TOOLTIP = tooltip;
         }
 
-        public void render(GuiGraphics context, Font textRenderer, int mouseX, int mouseY, int screenX, int screenY){
+        public void render(GuiGraphicsExtractor context, Font textRenderer, int mouseX, int mouseY, int screenX, int screenY){
             render(context, textRenderer, mouseX, mouseY, screenX, screenY, DEFAULT_TEXT_COLOUR);
         }
 
-        public void render(GuiGraphics context, Font textRenderer, int mouseX, int mouseY, int screenX, int screenY, int colour){
-            context.drawString(textRenderer, TEXT, X+screenX, Y+screenY, colour, false);
+        public void render(GuiGraphicsExtractor context, Font textRenderer, int mouseX, int mouseY, int screenX, int screenY, int colour){
+            context.text(textRenderer, TEXT, X+screenX, Y+screenY, colour | 0xFF000000, false);
             int mX = mouseX - screenX;
             int mY = mouseY - screenY;
             int max = textRenderer.width(TEXT) + X;
             if(mX >= X && mX<=max){
                 if(mY >= Y && mY<=Ymax){
-                    context.renderTooltip(textRenderer,TOOLTIP, java.util.Optional.empty(),mouseX,mouseY);
+                    context.setComponentTooltipForNextFrame(textRenderer,TOOLTIP,mouseX,mouseY);
                 }
             }
         }

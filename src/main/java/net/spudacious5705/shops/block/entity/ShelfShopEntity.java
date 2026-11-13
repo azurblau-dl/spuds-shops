@@ -9,9 +9,9 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.loading.FMLEnvironment;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
 import net.spudacious5705.shops.block.ModBlockEntities;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,18 +21,18 @@ public class ShelfShopEntity extends AbstractShopEntity{
 
     private final ShopInventory shopInventoryTop;
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     protected ShelfRenderData furtherDataTop;
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     protected ShelfRenderData furtherDataBottom;
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public ShelfRenderData furtherDataBottom(){return furtherDataBottom;}
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public ShelfRenderData furtherDataTop(){return furtherDataTop;}
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public static class ShelfRenderData {
         public final float itemLrotation = (float) ((Math.random() * 90) + 80f);
         public final float itemRrotation = (float) ((Math.random() * 90) + 80f);
@@ -44,7 +44,7 @@ public class ShelfShopEntity extends AbstractShopEntity{
     }
 
     @Override
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public void forceUpdateRenderData() {
         super.forceUpdateRenderData();
         rendererDataTop.update();
@@ -66,23 +66,23 @@ public class ShelfShopEntity extends AbstractShopEntity{
     public ShelfShopEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SHELF_SHOP_ENTITY.get(), pos, state, -0.3f);
         this.shopInventoryTop = ShopInventory.create(toggleSettings);
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             createRendererDataForShelf();
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     protected void createRendererDataForShelf() {
         this.furtherDataTop = new ShelfRenderData();
         this.furtherDataBottom = new ShelfRenderData();
         this.rendererDataTop = new RendererData(shopInventoryTop);
     }
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     protected RendererData rendererDataTop;
 
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public RendererData rendererDataTop(){return  rendererDataTop;}
 
 
@@ -92,28 +92,20 @@ public class ShelfShopEntity extends AbstractShopEntity{
     }
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider holder) {
-
-        CompoundTag donorTag = new CompoundTag();
-        ContainerHelper.saveAllItems(donorTag, shopInventoryTop, holder);
-
-        ListTag inventoryTwo = donorTag.getList("Items", Tag.TAG_COMPOUND);
-
-        tag.put("ItemsTwo", inventoryTwo);
-
-        super.saveAdditional(tag, holder);
+    protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput tag) {
+        var items = tag.list("ItemsTwo", net.minecraft.world.ItemStackWithSlot.CODEC);
+        for (int slot = 0; slot < shopInventoryTop.size(); slot++) {
+            var stack = shopInventoryTop.get(slot);
+            if (!stack.isEmpty()) items.add(new net.minecraft.world.ItemStackWithSlot(slot, stack));
+        }
+        super.saveAdditional(tag);
     }
-
     @Override
-    protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider holder) {
-        super.loadAdditional(tag, holder);
-
-        CompoundTag donorTag = new CompoundTag();
-        ListTag inventoryTwo = tag.getList("ItemsTwo", Tag.TAG_COMPOUND);
-        donorTag.put("Items", inventoryTwo);
-
-        ContainerHelper.loadAllItems(donorTag, shopInventoryTop, holder);
+    protected void loadAdditional(net.minecraft.world.level.storage.ValueInput tag) {
+        super.loadAdditional(tag);
+        shopInventoryTop.clear();
+        for (var item : tag.listOrEmpty("ItemsTwo", net.minecraft.world.ItemStackWithSlot.CODEC)) {
+            if (item.isValidInContainer(shopInventoryTop.size())) shopInventoryTop.set(item.slot(), item.stack());
+        }
     }
-    
-    
 }

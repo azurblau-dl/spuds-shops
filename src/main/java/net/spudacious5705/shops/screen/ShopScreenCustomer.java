@@ -1,7 +1,7 @@
 package net.spudacious5705.shops.screen;
 
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -15,9 +15,7 @@ public class ShopScreenCustomer extends AbstractContainerScreen<ShopScreenHandle
 
 
     public ShopScreenCustomer(ShopScreenHandlerCustomer handler, Inventory playerInventory, Component title) {
-        super(handler, playerInventory, title);
-        imageWidth = 228;
-        imageHeight = 256;
+        super(handler, playerInventory, title, 228, 256);
     }
 
     ShopScreenOwner.NotificationWidget NotifNBTMatchOFF;
@@ -33,21 +31,21 @@ public class ShopScreenCustomer extends AbstractContainerScreen<ShopScreenHandle
     }
 
     @Override
-    protected void renderLabels(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    protected void extractLabels(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         // Do nothing — this prevents the title and inventory label from rendering
         //TODO perhaps implement this in fabric
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(menu.getBackgroundTexture(), leftPos, topPos, 0, 0, imageWidth, imageHeight);
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractBackground(guiGraphics, mouseX, mouseY, partialTick);
+        net.spudacious5705.shops.screen.GuiTextures.blit(guiGraphics, menu.getBackgroundTexture(), leftPos, topPos, 0, 0, imageWidth, imageHeight);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        NotifNBTMatchOFF.renderWidget(guiGraphics,mouseX,mouseY,partialTick, font);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        NotifNBTMatchOFF.extractWidgetRenderState(guiGraphics,mouseX,mouseY,partialTick, font);
+        this.extractTooltip(guiGraphics, mouseX, mouseY);
     }
 }

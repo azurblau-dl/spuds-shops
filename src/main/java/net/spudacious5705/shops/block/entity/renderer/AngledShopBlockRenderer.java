@@ -4,8 +4,8 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
@@ -14,7 +14,7 @@ import net.spudacious5705.shops.block.entity.AngledShopEntity;
 import net.spudacious5705.shops.block.resources.CushionModel;
 import org.jetbrains.annotations.NotNull;
 
-public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEntity> {
+public class AngledShopBlockRenderer extends RecordedShopRenderer<AngledShopEntity> {
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -29,11 +29,11 @@ public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEn
     @Override
     public void render(
             AngledShopEntity shop, float tickDelta, PoseStack poseStack,
-            @NotNull MultiBufferSource bufferSource, int light, int overlay
+            @NotNull ShopRenderState bufferSource, int light, int overlay
     ) {
         ItemDisplayContext mode;
         final AngledShopEntity.RendererData data = shop.rendererData();
-        Font font = this.context.getFont();
+        Font font = this.context.font();
 
         poseStack.pushPose();
         poseStack.translate(0.5f,0f,0.5f);
@@ -46,13 +46,7 @@ public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEn
                         }));
         poseStack.translate(-0.5f,0f,-0.5f);
 
-        this.model.renderToBuffer(
-                poseStack,
-                bufferSource.getBuffer(RenderType.entitySolid(shop.getCushionTextureID())),
-                light,
-                overlay,
-                1
-        );
+        RenderCommands.cushion(model.root(), shop.getCushionTextureID(), poseStack, bufferSource, light, overlay);
 
         poseStack.popPose();
 
@@ -76,16 +70,7 @@ public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEn
                 poseStack.scale(0.4f, 0.4f, 0.4f);
                 mode = ItemDisplayContext.GUI;
             }
-            this.context.getItemRenderer().render(
-                    data.displayItem(),
-                    mode,
-                    false,
-                    poseStack,
-                    bufferSource,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.displayItem(), mode, false, poseStack, bufferSource, light, overlay);
 
             poseStack.popPose();
 
@@ -124,7 +109,7 @@ public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEn
 
             poseStack.scale(tSc,tSc,tSc);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -162,7 +147,7 @@ public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEn
 
             poseStack.scale(0.018f, 0.018f, 0.018f);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.stockQuantity,
                     data.qWidth(),
                     -4f,
@@ -200,14 +185,7 @@ public class AngledShopBlockRenderer implements BlockEntityRenderer<AngledShopEn
                 poseStack.mulPose(Axis.XP.rotationDegrees(-22.5f));
             }
             poseStack.scale(0.18f, 0.18f, 0.18f);
-            this.context.getItemRenderer().render(data.paymentItem(),
-                    ItemDisplayContext.GUI,
-                    false,
-                    poseStack,
-                    bufferSource,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0));
+            RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, poseStack, bufferSource, light, overlay);
             poseStack.popPose();
 
             ShopRenderUtils.renderShopWarns(tickDelta,poseStack,bufferSource,light,overlay,data,context,0.375f);

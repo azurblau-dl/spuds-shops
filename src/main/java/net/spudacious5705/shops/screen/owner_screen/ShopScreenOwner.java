@@ -2,18 +2,18 @@ package net.spudacious5705.shops.screen.owner_screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.spudacious5705.shops.screen.ScreenResources;
 import net.spudacious5705.shops.screen.ScreenSettingsGroup;
 import net.spudacious5705.shops.screen.ToggleButtonID;
@@ -31,27 +31,27 @@ import static net.spudacious5705.shops.screen.owner_screen.ShopScreenHandlerOwne
 public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOwner> {
 
     //region resources
-    private static final ResourceLocation RED_BUTTON = id("textures/gui/red_button.png");
-    private static final ResourceLocation RED_BUTTON_SELECTED = id("textures/gui/red_button_selected.png");
-    private static final ResourceLocation GREEN_BUTTON = id("textures/gui/green_button.png");
-    private static final ResourceLocation GREEN_BUTTON_SELECTED = id("textures/gui/green_button_selected.png");
-    private static final ResourceLocation COG_ICON = id("textures/gui/settings.png");
-    private static final ResourceLocation STORAGE_ICON = id("textures/gui/storage.png");
-    private static final ResourceLocation SHOPFRONT_ICON = CURRENCY_IMG_MAP.getOrDefault(
+    private static final Identifier RED_BUTTON = id("textures/gui/red_button.png");
+    private static final Identifier RED_BUTTON_SELECTED = id("textures/gui/red_button_selected.png");
+    private static final Identifier GREEN_BUTTON = id("textures/gui/green_button.png");
+    private static final Identifier GREEN_BUTTON_SELECTED = id("textures/gui/green_button_selected.png");
+    private static final Identifier COG_ICON = id("textures/gui/settings.png");
+    private static final Identifier STORAGE_ICON = id("textures/gui/storage.png");
+    private static final Identifier SHOPFRONT_ICON = CURRENCY_IMG_MAP.getOrDefault(
             Component.translatable("gui.spudaciousshops.currency_type").getString().charAt(0),
             id("textures/gui/currency_textures/gbp.png")
     );
-    private static final ResourceLocation TAB_SELECTED = id("textures/gui/tab_selected.png");
-    private static final ResourceLocation TAB_DESELECTED = id("textures/gui/tab_deselected.png");
-    private static final ResourceLocation TAB_HOVER = id("textures/gui/tab_hover.png");
-    private static final ResourceLocation CREATIVE_ON = id("textures/gui/creative_on.png");
-    private static final ResourceLocation CREATIVE_OFF = id("textures/gui/creative_off.png");
-    private static final ResourceLocation EFFECTS_ON = id("textures/gui/effects_on.png");
-    private static final ResourceLocation EFFECTS_OFF = id("textures/gui/effects_off.png");
-    private static final ResourceLocation NBT_IGNORE = id("textures/gui/nbt_ignore.png");
-    private static final ResourceLocation NBT_CHECK = id("textures/gui/nbt_check.png");
-    private static final ResourceLocation TRADE_MONO = id("textures/gui/trade_mono.png");
-    private static final ResourceLocation TRADE_SELECT = id("textures/gui/trade_select.png");
+    private static final Identifier TAB_SELECTED = id("textures/gui/tab_selected.png");
+    private static final Identifier TAB_DESELECTED = id("textures/gui/tab_deselected.png");
+    private static final Identifier TAB_HOVER = id("textures/gui/tab_hover.png");
+    private static final Identifier CREATIVE_ON = id("textures/gui/creative_on.png");
+    private static final Identifier CREATIVE_OFF = id("textures/gui/creative_off.png");
+    private static final Identifier EFFECTS_ON = id("textures/gui/effects_on.png");
+    private static final Identifier EFFECTS_OFF = id("textures/gui/effects_off.png");
+    private static final Identifier NBT_IGNORE = id("textures/gui/nbt_ignore.png");
+    private static final Identifier NBT_CHECK = id("textures/gui/nbt_check.png");
+    private static final Identifier TRADE_MONO = id("textures/gui/trade_mono.png");
+    private static final Identifier TRADE_SELECT = id("textures/gui/trade_select.png");
     //endregion resources
 
     private final ScreenSettingsGroup SETTINGS;
@@ -73,9 +73,7 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
     ToggleWidget ToggleIgnoreNBT;
 
     public ShopScreenOwner(ShopScreenHandlerOwner menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
-        this.imageWidth = 228;
-        this.imageHeight = 256;
+        super(menu, playerInventory, title, 228, 256);
         this.SETTINGS = menu.getSettings();
         this.leftPos = (width - imageWidth)/2;
         this.topPos = (height - imageHeight)/2;
@@ -142,19 +140,19 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
     //region rendering
     @Override
-    protected void renderLabels(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    protected void extractLabels(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         // Do nothing — this prevents the title and inventory label from rendering
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(menu.getBackgroundTexture(), leftPos, topPos, 0, 0, imageWidth, imageHeight);
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractBackground(guiGraphics, mouseX, mouseY, partialTick);
+        net.spudacious5705.shops.screen.GuiTextures.blit(guiGraphics, menu.getBackgroundTexture(), leftPos, topPos, 0, 0, imageWidth, imageHeight);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTick) {
-        renderBackground(context, mouseX, mouseY, partialTick);
-        super.render(context, mouseX, mouseY, partialTick);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(context, mouseX, mouseY, partialTick);
         Font font = Minecraft.getInstance().font;
 
 
@@ -164,24 +162,24 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
                 renderScreenGenerics(context,mouseX,mouseY,partialTick);
 
-                PaymentItemWidget.renderWidget(context,mouseX,mouseY,partialTick,font);
-                ProductItemWidget.renderWidget(context,mouseX,mouseY,partialTick,font);
+                PaymentItemWidget.extractWidgetRenderState(context,mouseX,mouseY,partialTick,font);
+                ProductItemWidget.extractWidgetRenderState(context,mouseX,mouseY,partialTick,font);
 
-                NotifShopStyleSelectOn.renderWidget(context,mouseX,mouseY,partialTick, font);
+                NotifShopStyleSelectOn.extractWidgetRenderState(context,mouseX,mouseY,partialTick, font);
             }
             case SETTINGS_TAB -> {
 
                 //toggleButtons.forEach();
 
                 if(menu.isPlayerCreative()) {
-                    ToggleCreative.renderWidget(context, mouseX, mouseY, partialTick);
+                    ToggleCreative.extractWidgetRenderState(context, mouseX, mouseY, partialTick);
                 }
 
-                ToggleIconsEffects.renderWidget(context,mouseX,mouseY,partialTick);
+                ToggleIconsEffects.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
 
-                ToggleIgnoreNBT.renderWidget(context,mouseX,mouseY,partialTick);
+                ToggleIgnoreNBT.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
 
-                ToggleShopStyle.renderWidget(context,mouseX,mouseY,partialTick);
+                ToggleShopStyle.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
 
 
 
@@ -196,11 +194,11 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
                 renderScreenGenerics(context,mouseX,mouseY,partialTick);
 
-                NotifNBTMatchOFF.renderWidget(context,mouseX,mouseY,partialTick, font);
+                NotifNBTMatchOFF.extractWidgetRenderState(context,mouseX,mouseY,partialTick, font);
             }
             case WARNING_TAB -> {
-                WarningCancel.renderWidget(context,mouseX,mouseY,partialTick);
-                WarningProceed.renderWidget(context,mouseX,mouseY,partialTick);
+                WarningCancel.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
+                WarningProceed.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
 
                 renderWarnPopupTextBody(context,font,leftPos,topPos);
 
@@ -208,24 +206,26 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
             default -> throw new IllegalStateException("Unexpected value: " + menu.getActiveTab());
         }
 
-        this.renderTooltip(context, mouseX, mouseY);
+        this.extractTooltip(context, mouseX, mouseY);
     }
 
-    private void renderScreenGenerics(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTick) {
-        SellerTabButton.renderWidget(context,mouseX,mouseY,partialTick);
-        SettingsTabButton.renderWidget(context,mouseX,mouseY,partialTick);
-        ShopFrontTabButton.renderWidget(context,mouseX,mouseY,partialTick);
+    private void renderScreenGenerics(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTick) {
+        SellerTabButton.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
+        SettingsTabButton.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
+        ShopFrontTabButton.extractWidgetRenderState(context,mouseX,mouseY,partialTick);
     }
     //endregion rendering
 
     //region interaction
     private void WarnPopupContinue(){
-        PacketDistributor.sendToServer(new ShopSelfDemotePkt());
+        ClientPlayNetworking.send(new ShopSelfDemotePkt());
         menu.close();
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
 
 
             if(switch (menu.getActiveTab()) {
@@ -260,7 +260,7 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
 
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     private boolean tryClickWidgets(double mouseX, double mouseY, int button, CustomClickableWidget... widgets) {
@@ -286,6 +286,8 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
             return false;
         }
 
+        public void onClick(double X, double Y) {}
+
         public void onClick(double X, double Y, int button){
             if(button==0) {
                 onClick(X, Y);
@@ -301,7 +303,7 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
         }
 
         @Override
-        protected void renderWidget(@NotNull GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {}
+        protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor pGuiGraphicsExtractor, int pMouseX, int pMouseY, float pPartialTick) {}
 
         @Override
         protected void updateWidgetNarration(@NotNull NarrationElementOutput pNarrationElementOutput) {}
@@ -309,28 +311,28 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
     private class TabWidget extends CustomClickableWidget {
 
-        private final ResourceLocation ICON_TEXTURE;
+        private final Identifier ICON_TEXTURE;
 
         private final int relatedState;
 
-        public TabWidget(int x, int y, Component message, ResourceLocation texture, int relatedState) {
+        public TabWidget(int x, int y, Component message, Identifier texture, int relatedState) {
             super(x, y, 22, 22, message);
             this.relatedState = relatedState;
             this.ICON_TEXTURE = texture;
         }
 
         @Override
-        protected void renderWidget(@NotNull GuiGraphics context, int pMouseX, int pMouseY, float pPartialTick) {
+        protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int pMouseX, int pMouseY, float pPartialTick) {
             int x = this.getX()-3;
             int y = this.getY()-6;
             if(menu.getActiveTab() == relatedState){
-                context.blit(TAB_SELECTED,x,y,32,32,0f,0f,32,32,32,32);
+                net.spudacious5705.shops.screen.GuiTextures.blit(context, TAB_SELECTED,x,y,32,32,0f,0f,32,32,32,32);
             }else if(isHovered(pMouseX,pMouseY)){
-                context.blit(TAB_HOVER,x,y,32,32,0f,0f,32,32,32,32);
+                net.spudacious5705.shops.screen.GuiTextures.blit(context, TAB_HOVER,x,y,32,32,0f,0f,32,32,32,32);
             }else{
-                context.blit(TAB_DESELECTED,x,y,32,32,0f,0f,32,32,32,32);
+                net.spudacious5705.shops.screen.GuiTextures.blit(context, TAB_DESELECTED,x,y,32,32,0f,0f,32,32,32,32);
             }
-            context.blit(ICON_TEXTURE,x+6,y+9,16,16,0f,0f,16,16,16,16);
+            net.spudacious5705.shops.screen.GuiTextures.blit(context, ICON_TEXTURE,x+6,y+9,16,16,0f,0f,16,16,16,16);
         }
 
         public void onClick(double mouseX, double mouseY) {
@@ -341,14 +343,14 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
     private class ToggleWidget extends CustomClickableWidget{
 
-        private final ResourceLocation TEXTURE_ON;
-        private final ResourceLocation TEXTURE_OFF;
+        private final Identifier TEXTURE_ON;
+        private final Identifier TEXTURE_OFF;
 
         private final ToggleButtonID BUTTON_ID;
         private final MutableComponent tooltip;
 
 
-        public ToggleWidget(int x, int y, ToggleButtonID buttonID, ResourceLocation textureON, ResourceLocation textureOFF, MutableComponent tooltipText) {
+        public ToggleWidget(int x, int y, ToggleButtonID buttonID, Identifier textureON, Identifier textureOFF, MutableComponent tooltipText) {
             super(x, y, 32, 16, Component.literal(""));
             this.BUTTON_ID = buttonID;
             this.visible = false;
@@ -358,17 +360,17 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
         }
 
         @Override
-        protected void renderWidget(@NotNull GuiGraphics context, int mouseX, int mouseY, float pPartialTick) {
+        protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float pPartialTick) {
             int x = this.getX();
             int y = this.getY();
 
             boolean toggle = menu.getStateOfSetting(BUTTON_ID);
 
-            context.blit(SETTINGS.BUTTON_BACKGROUND(),x-3,y-3,64,64,0f,0f,64,64,64,64);
-            context.blit(toggle ? TEXTURE_ON : TEXTURE_OFF ,x,y,32,32,0f,0f,32,32,32,32);
+            net.spudacious5705.shops.screen.GuiTextures.blit(context, SETTINGS.BUTTON_BACKGROUND(),x-3,y-3,64,64,0f,0f,64,64,64,64);
+            net.spudacious5705.shops.screen.GuiTextures.blit(context, toggle ? TEXTURE_ON : TEXTURE_OFF ,x,y,32,32,0f,0f,32,32,32,32);
 
             if(isHovered(mouseX,mouseY)){
-                context.renderTooltip(Minecraft.getInstance().font, tooltip,mouseX,mouseY);
+                context.setTooltipForNextFrame(Minecraft.getInstance().font, tooltip,mouseX,mouseY);
             }
         }
 
@@ -381,14 +383,14 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
     private class ButtonWidget extends CustomClickableWidget{
 
         private final Runnable FUNCTION;
-        private final ResourceLocation TEXTURE;
-        private final ResourceLocation TEXTURE_HOVERED;
+        private final Identifier TEXTURE;
+        private final Identifier TEXTURE_HOVERED;
         private final MutableComponent TEXT;
         private final int textX;
         private final int textY;
         private final int textColour;
 
-        public ButtonWidget(int x, int y, Component message, Runnable function, ResourceLocation texture, ResourceLocation textureHovered, MutableComponent text, int colour) {
+        public ButtonWidget(int x, int y, Component message, Runnable function, Identifier texture, Identifier textureHovered, MutableComponent text, int colour) {
             super(x, y, 64, 28, message);
             this.FUNCTION = function;
             this.TEXTURE = texture;
@@ -400,20 +402,20 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
         }
 
         @Override
-        protected void renderWidget(@NotNull GuiGraphics context, int pMouseX, int pMouseY, float pPartialTick) {
+        protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int pMouseX, int pMouseY, float pPartialTick) {
             int x = this.getX();
             int y = this.getY()-16;
             int tx = textX;
 
             if(isHovered(pMouseX,pMouseY)){
 
-                context.blit(TEXTURE_HOVERED,x,y,64,64,0f,0f,64,64,64,64);
+                net.spudacious5705.shops.screen.GuiTextures.blit(context, TEXTURE_HOVERED,x,y,64,64,0f,0f,64,64,64,64);
 
                 tx++;
 
             }else{
 
-                context.blit(TEXTURE,x,y,64,64,0f,0f,64,64,64,64);
+                net.spudacious5705.shops.screen.GuiTextures.blit(context, TEXTURE,x,y,64,64,0f,0f,64,64,64,64);
 
             }
 
@@ -440,7 +442,7 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
         }
 
 
-        protected void renderWidget(@NotNull GuiGraphics context, int pMouseX, int pMouseY, float pPartialTick, Font font) {
+        protected void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int pMouseX, int pMouseY, float pPartialTick, Font font) {
 
             int x = this.getX()+leftPos;
             int y = this.getY()+topPos;
@@ -449,22 +451,22 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
 
 
 
-            context.pose().pushPose();
-            context.pose().translate(0.0F, 0.0F, 150.0F);
+            context.pose().pushMatrix();
+            context.nextStratum();
             if (isHovered(pMouseX,pMouseY)) {//hovered?
                 context.fill(x, y, x + 16, y + 16, -2130706433);
                 if(stack.isEmpty()){
-                    context.renderTooltip(font, emptyStackTooltip, pMouseX, pMouseY);
+                    context.setTooltipForNextFrame(font, emptyStackTooltip, pMouseX, pMouseY);
                 } else {
-                    context.renderTooltip(font, stack, pMouseX, pMouseY);
+                    context.setTooltipForNextFrame(font, stack, pMouseX, pMouseY);
                 }
             }
 
-            context.renderItem(stack, x, y);
-            context.renderItemDecorations(font, stack, x, y, null);
+            context.item(stack, x, y);
+            context.itemDecorations(font, stack, x, y, null);
 
 
-            context.pose().popPose();
+            context.pose().popMatrix();
         }
 
         @Override
@@ -484,7 +486,7 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
             assert minecraft != null;
             assert minecraft.gameMode != null;
             assert minecraft.player != null;
-            minecraft.gameMode.handleInventoryMouseClick(menu.containerId, slot.index, button, ClickType.PICKUP, minecraft.player);
+            minecraft.gameMode.handleContainerInput(menu.containerId, slot.index, button, ContainerInput.PICKUP, minecraft.player);
         }
 
     }
@@ -499,15 +501,15 @@ public class ShopScreenOwner extends AbstractContainerScreen<ShopScreenHandlerOw
             this.tooltip = tooltip;
             this.renderToggle = renderToggle;
         }
-        public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float d, Font font) {
+        public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float d, Font font) {
             if(!renderToggle.get())return;
             int x = this.getX();
             int y = this.getY();
 
-            graphics.blit(NOTIFICATION_ICON,x,y,32,32,0f,0f,32,32,32,32);
+            net.spudacious5705.shops.screen.GuiTextures.blit(graphics, NOTIFICATION_ICON,x,y,32,32,0f,0f,32,32,32,32);
 
             if(isHovered(mouseX,mouseY)){
-                graphics.renderTooltip(font, tooltip, java.util.Optional.empty(), mouseX, mouseY);
+                graphics.setComponentTooltipForNextFrame(font, tooltip, mouseX, mouseY);
             }
         }
     }

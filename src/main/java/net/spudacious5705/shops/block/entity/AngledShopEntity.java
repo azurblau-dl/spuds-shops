@@ -4,7 +4,7 @@ package net.spudacious5705.shops.block.entity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import net.spudacious5705.shops.block.ModBlockEntities;
 import net.spudacious5705.shops.properties.Colour;
@@ -28,19 +28,15 @@ public class AngledShopEntity extends AbstractShopEntity{
 
 
     @Override
-    protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider holder) {
-        super.loadAdditional(tag, holder);
-        if(tag.contains(COLOUR_NBT_TAG)) {
-            this.cushionColour = Colour.fromId(tag.getInt(COLOUR_NBT_TAG));
-        }else{
-            this.cushionColour = Colour.RED;
-        }
+    protected void loadAdditional(net.minecraft.world.level.storage.ValueInput tag) {
+        super.loadAdditional(tag);
+        this.cushionColour = Colour.fromId(tag.getIntOr(COLOUR_NBT_TAG, Colour.RED.getId()));
     }
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider holder) {
+    protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput tag) {
         tag.putInt(COLOUR_NBT_TAG, this.getCushionColour().getId());
-        super.saveAdditional(tag, holder);
+        super.saveAdditional(tag);
     }
 
     public Colour getCushionColour() {
@@ -51,7 +47,7 @@ public class AngledShopEntity extends AbstractShopEntity{
         this.cushionColour = colour;
     }
 
-    public ResourceLocation getCushionTextureID() {
+    public Identifier getCushionTextureID() {
         return CushionTextures.TEXTURE_MAP.get(getCushionColour());
     }
 

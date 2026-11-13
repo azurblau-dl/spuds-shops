@@ -1,17 +1,13 @@
 package net.spudacious5705.shops.screen.networking;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.VarInt;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.spudacious5705.shops.screen.owner_screen.ShopScreenHandlerOwner;
 import net.spudacious5705.shops.screen.ToggleButtonID;
-import net.spudacious5705.shops.screen.owner_screen.ShopScreenOwner;
 import org.jetbrains.annotations.NotNull;
 
 import static net.spudacious5705.shops.SpudaciousShops.id;
@@ -44,29 +40,20 @@ public record ToggleSyncPkt(ToggleButtonID buttonID, boolean state)  implements 
             ToggleSyncPkt::new
     );
 
-    public void handleServerSide(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
+    public void handleServerSide(net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.Context ctx) {
+        ctx.server().execute(() -> {
+            ServerPlayer player = ctx.player();
             if(
-                    ctx.player() instanceof ServerPlayer player
-                    &&
                     player.containerMenu instanceof ShopScreenHandlerOwner screenHandler
             ) {
                 boolean response = screenHandler.toggleButtonServersideUpdate(buttonID,state);
 
                 // Send response back to client
-                PacketDistributor.sendToPlayer( player,
+                net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send( player,
                         new ToggleSyncPkt(buttonID, response)
                 );
             }
         });
     }
 
-    public void handleClientSide(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.screen instanceof ShopScreenOwner screen) {
-                screen.getMenu().updateToggleButtonFromPacket(buttonID, state);
-            }
-        });
-    }
 }

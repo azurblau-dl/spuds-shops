@@ -52,51 +52,32 @@ public class PermissionManager<B extends BlockEntity> implements IBlockPermissio
     @MagicConstant
     private static final String CONTRACTS = "contracts";
 
-    public void load(@NotNull CompoundTag tag) {
+    public void load(net.minecraft.world.level.storage.ValueInput tag) {
         identificationRecords.clear();
-
-        if (tag.contains(CONTRACTS, Tag.TAG_LIST)) {
-            ListTag contractList = tag.getList(CONTRACTS, Tag.TAG_COMPOUND);
-
-            for (int index = 0; index < contractList.size(); index++) {
-                CompoundTag contract = contractList.getCompound(index);
-
-                String name = contract.getString(CONTRACT_NAME);
-                UUID uuid = contract.getUUID(CONTRACT_UUID);
-                PermissionLevel perms = PermissionLevel.fromInt(contract.getInt(CONTRACT_LEVEL));
-
-                if (perms.asInt() > 0) {
-                    identificationRecords.add(new PlayerID(uuid, name, perms));
-                }
+        for (var contract : tag.childrenListOrEmpty(CONTRACTS)) {
+            var uuid = contract.read(CONTRACT_UUID, net.minecraft.core.UUIDUtil.CODEC);
+            PermissionLevel perms = PermissionLevel.fromInt(contract.getIntOr(CONTRACT_LEVEL, 0));
+            if (uuid.isPresent() && perms.asInt() > 0) {
+                identificationRecords.add(new PlayerID(uuid.get(), contract.getStringOr(CONTRACT_NAME, uuid.get().toString()), perms));
             }
         }
-
+        tag.read("owner_id", net.minecraft.core.UUIDUtil.CODEC).ifPresent(ownerID -> {
+            if (identificationRecords.stream().noneMatch(id -> id.uuid().equals(ownerID))) {
+                identificationRecords.add(new PlayerID(ownerID, tag.getStringOr("owner_name", ownerID.toString()), PermissionLevel.OWNER));
+            }
+        });
         copyRecordsToContracts();
-
-        if (tag.hasUUID("owner_id")) {
-            UUID ownerID = tag.getUUID("owner_id");
-            String name = tag.contains("owner_name") ? tag.getString("owner_name") : ownerID.toString();
-
-            identificationRecords.add(new PlayerID(ownerID, name, PermissionLevel.OWNER));
-        }
     }
 
-    public void save(CompoundTag tag) {
-        ListTag contractList = new ListTag();
-
+    public void save(net.minecraft.world.level.storage.ValueOutput tag) {
+        var contracts = tag.childrenList(CONTRACTS);
         for (PlayerID id : identificationRecords) {
-            CompoundTag contractNBT = new CompoundTag();
-            contractNBT.putString(CONTRACT_NAME, id.name);
-            contractNBT.putUUID(CONTRACT_UUID, id.uuid);
-            contractNBT.putInt(CONTRACT_LEVEL, id.permissionLevel.asInt());
-            contractList.add(contractNBT);
-        }
-
-        if (!contractList.isEmpty()) {
-            tag.put(CONTRACTS, contractList);
+            var contract = contracts.addChild();
+            contract.putString(CONTRACT_NAME, id.name());
+            contract.store(CONTRACT_UUID, net.minecraft.core.UUIDUtil.CODEC, id.uuid());
+            contract.putInt(CONTRACT_LEVEL, id.permissionLevel().asInt());
         }
     }
-
 
     /// assign to using nbt read write
 
@@ -108,10 +89,10 @@ public class PermissionManager<B extends BlockEntity> implements IBlockPermissio
             CustomData data = contract.get(DataComponents.CUSTOM_DATA);
             if (data != null) {
                 CompoundTag tag = data.copyTag();
-                if(tag.hasUUID(NBTuuid)){
+                if(tag.read(NBTuuid, net.minecraft.core.UUIDUtil.CODEC).isPresent()){
                     return new PlayerID(
-                    tag.getUUID(NBTuuid),
-                            tag.getString(NBTname),
+                    tag.read(NBTuuid, net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
+                            tag.getStringOr(NBTname, ""),
                             permissionLevel
                     );
                 }
@@ -329,7 +310,7 @@ public class PermissionManager<B extends BlockEntity> implements IBlockPermissio
                         if(OwnerBlock.getLevel() instanceof ServerLevel server){
                             server.players().stream().filter(
                                     player -> player.getUUID().compareTo(id.uuid) == 0
-                            ).findFirst().ifPresent(Player::closeContainer);
+                            ).findFirst().ifPresent(p -> { if (p instanceof net.minecraft.server.level.ServerPlayer sp) sp.closeContainer(); });
                         }
 
                         contracts.set(index, ItemStack.EMPTY);

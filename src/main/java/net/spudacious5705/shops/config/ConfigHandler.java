@@ -10,7 +10,8 @@ import static net.spudacious5705.shops.SpudaciousShops.MOD_ID;
 
 public class ConfigHandler {
 
-    private static final File CONFIG_PATH = new File("config/"+MOD_ID+".toml");
+    private static final File CONFIG_PATH = net.fabricmc.loader.api.FabricLoader.getInstance()
+            .getConfigDir().resolve(MOD_ID + ".toml").toFile();
     public static final FileConfig config;
 
     public static final int stackSizeMultiplier;
@@ -19,6 +20,11 @@ public class ConfigHandler {
 
 
     static {
+        try {
+            java.nio.file.Files.createDirectories(CONFIG_PATH.toPath().getParent());
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException("Cannot create Spud's Shops configuration directory", e);
+        }
         config = FileConfig.of(CONFIG_PATH);
         config.load();
 

@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+
 import net.spudacious5705.shops.block.entity.AngledShopEntity;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,13 +19,13 @@ public record MatchingCushionColourCondition(String expectedColourName) implemen
     );
 
     @Override
-    public @NotNull LootItemConditionType getType() {
-        return ModLootConditions.MATCHES_ENUM;
+    public @NotNull MapCodec<MatchingCushionColourCondition> codec() {
+        return CODEC;
     }
 
     @Override
     public boolean test(LootContext lootContext) {
-        BlockEntity blockEntity = lootContext.getParam(LootContextParams.BLOCK_ENTITY);
+        BlockEntity blockEntity = lootContext.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
         if (blockEntity instanceof AngledShopEntity shop) {
             return shop.getCushionColour().matchesString(expectedColourName);
         }

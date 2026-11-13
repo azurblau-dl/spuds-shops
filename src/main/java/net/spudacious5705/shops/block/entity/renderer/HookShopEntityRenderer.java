@@ -3,13 +3,13 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.spudacious5705.shops.block.entity.HookShopEntity;
 
-public class HookShopEntityRenderer implements BlockEntityRenderer<HookShopEntity>, ShopRenderUtils {
+public class HookShopEntityRenderer extends RecordedShopRenderer<HookShopEntity> implements ShopRenderUtils {
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -18,10 +18,10 @@ public class HookShopEntityRenderer implements BlockEntityRenderer<HookShopEntit
     }
 
     @Override
-    public void render(HookShopEntity shop, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+    public void render(HookShopEntity shop, float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay) {
         ItemDisplayContext mode;
         final HookShopEntity.RendererData data = shop.rendererData();
-        Font font = this.context.getFont();
+        Font font = this.context.font();
         if(data == null){
             return;
         }
@@ -60,14 +60,7 @@ public class HookShopEntityRenderer implements BlockEntityRenderer<HookShopEntit
 
 
 
-            this.context.getItemRenderer().render(data.displayItem(), mode,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.displayItem(), mode, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
 
             matrices.pushPose();
@@ -79,7 +72,7 @@ public class HookShopEntityRenderer implements BlockEntityRenderer<HookShopEntit
             matrices.pushPose();
             float textSize = data.useSmallTextPrice()?0.012f:0.016f;
             matrices.scale(textSize, textSize, -textSize);
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -98,7 +91,7 @@ public class HookShopEntityRenderer implements BlockEntityRenderer<HookShopEntit
             matrices.mulPose(Axis.YP.rotationDegrees(180f));
             matrices.translate(-0.05f, 0f, -0.03126f);
             matrices.scale(textSize, textSize, -textSize);
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -134,24 +127,11 @@ public class HookShopEntityRenderer implements BlockEntityRenderer<HookShopEntit
             matrices.translate(0.12f, 0f, -r);
 
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
-            this.context.getItemRenderer().render(data.paymentItem(), ItemDisplayContext.GUI,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
             matrices.pushPose();
             matrices.scale(scaleFactor, scaleFactor, scaleFactor);
-            this.context.getItemRenderer().render(data.paymentItem(), ItemDisplayContext.GUI,                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
 
             matrices.popPose();

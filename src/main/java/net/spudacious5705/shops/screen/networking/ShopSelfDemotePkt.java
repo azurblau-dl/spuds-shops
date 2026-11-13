@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.spudacious5705.shops.screen.owner_screen.ShopScreenHandlerOwner;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,12 +28,11 @@ public record ShopSelfDemotePkt() implements CustomPacketPayload {
             public void encode(@NotNull ByteBuf b, @NotNull ShopSelfDemotePkt de) {}
         };
 
-    public void handle(IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
+    public void handle(net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.Context ctx) {
+        ctx.server().execute(() -> {
+            ServerPlayer player = ctx.player();
             if(
-                    ctx.player() instanceof ServerPlayer player
-                            &&
-                            player.containerMenu instanceof ShopScreenHandlerOwner screenHandler
+                    player.containerMenu instanceof ShopScreenHandlerOwner screenHandler
             ) {
                 screenHandler.selfDemotePlayer(player);
                 player.doCloseContainer();

@@ -2,7 +2,7 @@ package net.spudacious5705.shops.block.entity;
 
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.BakedModel;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -28,9 +28,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.loading.FMLEnvironment;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
 import net.spudacious5705.shops.block.custom.AbstractShopBlock;
 import net.spudacious5705.shops.block.entity.renderer.ShopRenderUtils;
 import net.spudacious5705.shops.config.ConfigHandler;
@@ -245,7 +245,7 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
 
         private void errorMessage(String message, Player player){
             if(player.level().isClientSide()) {
-                player.displayClientMessage(Component.literal(message), true);
+                player.sendOverlayMessage(Component.literal(message));
             }
         }
 
@@ -462,6 +462,15 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (level instanceof ServerLevel server) {
+            itemScatter(server, pos);
+            server.updateNeighbourForOutputSignal(pos, getBlockState().getBlock());
+        }
+        super.preRemoveSideEffects(pos, state);
+    }
+
     public void forceUpdateClient() {
         if(level instanceof ServerLevel server) {
             BlockPos pos = this.getBlockPos();
@@ -479,31 +488,26 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
 
 
     @Override
-    protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider holder) {
-        super.loadAdditional(tag, holder);
-        ContainerHelper.loadAllItems(tag, shopInventory, holder);
+    protected void loadAdditional(net.minecraft.world.level.storage.ValueInput tag) {
+        super.loadAdditional(tag);
+        shopInventory.clear();
+        ContainerHelper.loadAllItems(tag, shopInventory);
 
         permissionManager.load(tag);
 
-        if (tag.contains("decay_timer")) {
-            this.decayTimer = tag.getInt("decay_timer");
-        }
+        this.decayTimer = tag.getIntOr("decay_timer", 0);
 
         for (ToggleButtonID id : ToggleButtonID.values()) {
             String nbtName = "toggle_" + id.getSerialised();
-            if (tag.contains(nbtName)) {
-                toggleSettings.put(id, tag.getBoolean(nbtName));
-            } else {
-                toggleSettings.put(id, ConfigHandler.getDefaultToggleSetting(id));
-            }
+            toggleSettings.put(id, tag.getBooleanOr(nbtName, ConfigHandler.getDefaultToggleSetting(id)));
         }
 
         checkShouldRenderParticles();
     }
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider holder) {
-        ContainerHelper.saveAllItems(tag, shopInventory, holder);
+    protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput tag) {
+        ContainerHelper.saveAllItems(tag, shopInventory);
 
         permissionManager.save(tag);
 
@@ -517,7 +521,7 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
         }
 
         checkShouldRenderParticles();
-        super.saveAdditional(tag, holder);
+        super.saveAdditional(tag);
     }
 
 
@@ -534,7 +538,7 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
         this.shopInventory = ShopInventory.create(toggleSettings);
         this.particleOffset = particleOffset;
 
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             createRendererData();
             isClient = true;
         } else {
@@ -545,7 +549,10 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
     @NotNull
     public MenuProvider createScreenHandlerFactory(boolean openTop) {
 
-        return new MenuProvider() {
+        return new net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider<net.spudacious5705.shops.screen.ShopOpeningData>() {
+            @Override public net.spudacious5705.shops.screen.ShopOpeningData getScreenOpeningData(net.minecraft.server.level.ServerPlayer player) {
+                return new net.spudacious5705.shops.screen.ShopOpeningData(getBlockPos(), openTop);
+            }
 
             @Override
             public @NotNull Component getDisplayName() {
@@ -583,7 +590,7 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
 
     private final boolean isClient;
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     protected void createRendererData(){
         this.rendererData = new RendererData(shopInventory);
     }
@@ -605,9 +612,9 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
         if(decayTimer > -1) {
             if (decayTimer > hourInTicks) {
 
-                if (shouldRenderParticles && world.random.nextFloat() < 0.05f) {
+                if (shouldRenderParticles && world.getRandom().nextFloat() < 0.05f) {
                     for (int i = 0; i < 3; i++) {
-                        world.sendParticles(ParticleTypes.ANGRY_VILLAGER, pos.getX() + .2 + world.random.nextFloat(), pos.getY() + world.random.nextFloat() + particleOffset, pos.getZ() + world.random.nextFloat(), 1, 0, 0, 0, 0);
+                        world.sendParticles(ParticleTypes.ANGRY_VILLAGER, pos.getX() + .2 + world.getRandom().nextFloat(), pos.getY() + world.getRandom().nextFloat() + particleOffset, pos.getZ() + world.getRandom().nextFloat(), 1, 0, 0, 0, 0);
                     }
                 }
 
@@ -700,18 +707,18 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
 
 
     //region RENDERING
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public void renderTick() {
         this.rendererData.onTick();
     }
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     protected RendererData rendererData;
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public RendererData rendererData(){return  rendererData;}
     //Only call from the CLIENT
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public void forceUpdateRenderData() {
         rendererData.update();
     }
@@ -723,7 +730,7 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
     }
 
 
-    @OnlyIn(Dist.CLIENT)
+    @Environment(EnvType.CLIENT)
     public class RendererData{
 
         protected final ShopInventory inventory;
@@ -814,15 +821,13 @@ public abstract class AbstractShopEntity extends BlockEntity implements IBlockPe
                 Minecraft mc = Minecraft.getInstance();
 
                 if(displayItem.getItem() instanceof BlockItem){
-                    BakedModel model = mc.getItemRenderer().getModel(displayItem, null, null, 0);
-                    stockDisplayType = model.isGui3d();
+                    stockDisplayType = net.spudacious5705.shops.block.entity.renderer.RenderCommands.isThreeDimensional(displayItem);
                 } else {
                     stockDisplayType = false;
                 }
 
                 if(paymentItem.getItem() instanceof BlockItem){
-                    BakedModel model = mc.getItemRenderer().getModel(paymentItem, null, null, 0);
-                    currencyDisplayType = model.isGui3d();
+                    currencyDisplayType = net.spudacious5705.shops.block.entity.renderer.RenderCommands.isThreeDimensional(paymentItem);
                 } else {
                     currencyDisplayType = false;
                 }

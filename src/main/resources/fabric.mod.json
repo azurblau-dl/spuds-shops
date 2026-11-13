@@ -21,21 +21,14 @@
 		],
 		"client": [
 			"net.spudacious5705.shops.SpudaciousShopsClient"
-		],
-		"fabric-datagen": [
-		],
-		"server": [
 		]
 	},
 	"mixins": [
 	],
 	"depends": {
-		"fabricloader": ">=0.16.10",
-		"minecraft": "~1.21.1",
-		"java": ">=17",
-		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
+		"fabricloader": ">=0.20.1",
+		"minecraft": "${minecraft_version_range}",
+		"java": ">=25",
+		"fabric-api": ">=0.145.1"
 	}
 }

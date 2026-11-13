@@ -3,14 +3,14 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.spudacious5705.shops.block.entity.WindowSillShopEntity;
 
-public class WindowSillShopEntityRenderer implements BlockEntityRenderer<WindowSillShopEntity>, ShopRenderUtils {
+public class WindowSillShopEntityRenderer extends RecordedShopRenderer<WindowSillShopEntity> implements ShopRenderUtils {
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -19,10 +19,10 @@ public class WindowSillShopEntityRenderer implements BlockEntityRenderer<WindowS
     }
 
     @Override
-    public void render(WindowSillShopEntity shop, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+    public void render(WindowSillShopEntity shop, float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay) {
         ItemDisplayContext mode;
         final WindowSillShopEntity.RendererData data = shop.rendererData();
-        Font font = this.context.getFont();
+        Font font = this.context.font();
         if(data == null){
             return;
         }
@@ -59,16 +59,7 @@ public class WindowSillShopEntityRenderer implements BlockEntityRenderer<WindowS
 
 
 
-            this.context.getItemRenderer().render(
-                    data.displayItem(),
-                    mode,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.displayItem(), mode, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
 
             //render price (count of currency)
@@ -92,7 +83,7 @@ public class WindowSillShopEntityRenderer implements BlockEntityRenderer<WindowS
             float tSc = data.useSmallTextPrice()?0.014f:0.018f;
             matrices.scale(tSc, tSc, -tSc);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.text(),
                     data.width(),
                     -4f,
@@ -128,7 +119,7 @@ public class WindowSillShopEntityRenderer implements BlockEntityRenderer<WindowS
             float sQs = data.useSmallTextProduct()? 0.020f : 0.025f;
             matrices.scale(sQs, sQs, sQs);
 
-            font.drawInBatch(
+            RenderCommands.text(
                     data.stockQuantity,
                     data.qWidth(),
                     -4f,
@@ -163,14 +154,7 @@ public class WindowSillShopEntityRenderer implements BlockEntityRenderer<WindowS
 
             matrices.scale(0.18f, 0.18f, 0.18f);
             
-            this.context.getItemRenderer().render(data.paymentItem(), ItemDisplayContext.GUI,
-                    false,
-                    matrices,
-                    vertexConsumers,
-                    light,
-                    overlay,
-                    context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-            );
+            RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
             matrices.popPose();
 
             ShopRenderUtils.renderShopWarns(tickDelta, matrices, vertexConsumers, light, overlay, data, context, -0.5f);

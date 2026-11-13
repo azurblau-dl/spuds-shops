@@ -3,13 +3,13 @@ package net.spudacious5705.shops.block.entity.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
+
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.spudacious5705.shops.block.entity.ShelfShopEntity;
 
-public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEntity>, ShopRenderUtils {
+public class ShelfShopEntityRenderer extends RecordedShopRenderer<ShelfShopEntity> implements ShopRenderUtils {
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -19,7 +19,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
 
 
     @Override
-    public void render(ShelfShopEntity shop, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay) {
+    public void render(ShelfShopEntity shop, float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay) {
 
         final ShelfShopEntity.RendererData data1 = shop.rendererData();
         final ShelfShopEntity.RendererData data2 = shop.rendererDataTop();
@@ -51,10 +51,10 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
 
     }
 
-    private void renderShelf(ShelfShopEntity.RendererData data, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light, int overlay, ShelfShopEntity.ShelfRenderData furtherData){
+    private void renderShelf(ShelfShopEntity.RendererData data, float tickDelta, PoseStack matrices, ShopRenderState vertexConsumers, int light, int overlay, ShelfShopEntity.ShelfRenderData furtherData){
         ItemDisplayContext mode;
         float itemTranslationFactor;
-        Font font = this.context.getFont();
+        Font font = this.context.font();
         Axis rotationAxis;
         int renderCount;
         if(data != null){
@@ -87,28 +87,14 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
                     matrices.pushPose();
                     matrices.translate(-itemTranslationFactor, 0f, -y*0.05f);
                     matrices.mulPose(rotationAxis.rotationDegrees(furtherData.itemLrotation+(y+1)*55f));
-                    this.context.getItemRenderer().render(data.displayItem(), mode,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-                    );
+                    RenderCommands.item(context, data.displayItem(), mode, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
 
                     //right
                     matrices.pushPose();
                     matrices.translate(itemTranslationFactor, 0f, -y*0.05f);
                     matrices.mulPose(rotationAxis.rotationDegrees(furtherData.itemRrotation+(y+1)*55f));
-                    this.context.getItemRenderer().render(data.displayItem(), mode,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(data.displayItem(), null, null, 0)
-                    );
+                    RenderCommands.item(context, data.displayItem(), mode, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
                 }
                 matrices.popPose();
@@ -125,7 +111,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
                     matrices.mulPose(Axis.XP.rotationDegrees(-90f));//was rotated around 0,0,0
                     float textSize = data.useSmallTextPrice()?0.015f:0.02f;
                     matrices.scale(textSize, textSize, -textSize);
-                    font.drawInBatch(
+                    RenderCommands.text(
                             data.text(),
                             data.width(),
                             -4f,
@@ -145,7 +131,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
                     matrices.mulPose(Axis.ZP.rotationDegrees(180f));//was rotated around 0,0,0,
                     textSize = data.useSmallTextProduct()?0.015f:0.02f;
                     matrices.scale(textSize, textSize, -textSize);
-                    font.drawInBatch(
+                    RenderCommands.text(
                             data.stockQuantity,
                             data.qWidth(),
                             -4f,
@@ -178,14 +164,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
 
 
                     matrices.scale(scaleFactor, scaleFactor, scaleFactor);
-                    this.context.getItemRenderer().render(data.paymentItem(), ItemDisplayContext.GUI,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-                    );
+                    RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
                 } else {
                     //render price (count of currency)
@@ -196,7 +175,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
                     matrices.mulPose(Axis.ZP.rotationDegrees(180f));//was rotated around 0,0,0
                     float textSize = data.useSmallTextPrice()?0.012f:0.016f;
                     matrices.scale(textSize, textSize, -textSize);
-                    font.drawInBatch(
+                    RenderCommands.text(
                             data.text(),
                             data.width(),
                             -4f,
@@ -216,7 +195,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
                     matrices.mulPose(Axis.ZP.rotationDegrees(180f)); //was rotated around 0,0,0
                     textSize = data.useSmallTextProduct()?0.012f:0.016f;
                     matrices.scale(textSize, textSize, -textSize);
-                    font.drawInBatch(
+                    RenderCommands.text(
                             data.stockQuantity,
                             data.qWidth(),
                             -4f,
@@ -247,14 +226,7 @@ public class ShelfShopEntityRenderer implements BlockEntityRenderer<ShelfShopEnt
                     matrices.mulPose(Axis.YP.rotationDegrees(180f));
 
                     matrices.scale(scaleFactor, scaleFactor, scaleFactor);
-                    this.context.getItemRenderer().render(data.paymentItem(), ItemDisplayContext.GUI,
-                            false,
-                            matrices,
-                            vertexConsumers,
-                            light,
-                            overlay,
-                            this.context.getItemRenderer().getModel(data.paymentItem(), null, null, 0)
-                    );
+                    RenderCommands.item(context, data.paymentItem(), ItemDisplayContext.GUI, false, matrices, vertexConsumers, light, overlay);
                     matrices.popPose();
                 }
             }

@@ -127,8 +127,7 @@ public class AngledShopBlock extends AbstractShopBlock {
 
     @Override
     public @NotNull ItemStack getCloneItemStack(
-            @NotNull BlockState state, @NotNull HitResult target,
-            LevelReader level, @NotNull BlockPos pos, @NotNull Player player
+            LevelReader level, @NotNull BlockPos pos, @NotNull BlockState state, boolean includeData
     ) {
        Colour colour = Colour.RED;
         if(level.getBlockEntity(pos) instanceof AngledShopEntity shopEntity) {
@@ -166,8 +165,7 @@ public class AngledShopBlock extends AbstractShopBlock {
     };}
     @Override
     public @NotNull VoxelShape getOcclusionShape(
-            @NotNull BlockState state, @NotNull BlockGetter level,
-            @NotNull BlockPos pos
+            @NotNull BlockState state
     ){return CULLING_SHAPE;}
 
     @Override
@@ -241,7 +239,7 @@ public class AngledShopBlock extends AbstractShopBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state, @NotNull BlockEntityType<T> type) {
         if(ModBlockEntities.ANGLED_SHOP_ENTITY.get() == type) {
-            return level.isClientSide
+            return level.isClientSide()
                             ? (lvl, pos, st, be) -> ((AngledShopEntity)be).renderTick()
                             : (lvl, pos, st, be) -> ((AngledShopEntity)be).serverTick((ServerLevel) lvl, pos,  st);
 

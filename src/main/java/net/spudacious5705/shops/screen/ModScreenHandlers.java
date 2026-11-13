@@ -3,61 +3,51 @@ package net.spudacious5705.shops.screen;
 
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.MenuType;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.spudacious5705.shops.SpudaciousShops;
 import net.spudacious5705.shops.screen.owner_screen.ShopScreenHandlerOwner;
 import net.spudacious5705.shops.screen.owner_screen.ShopScreenOwner;
 
 import java.util.Map;
 import java.util.function.Supplier;
+import net.spudacious5705.shops.util.PendingRegistry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
 
 import static net.spudacious5705.shops.SpudaciousShops.MOD_ID;
 import static net.spudacious5705.shops.SpudaciousShops.id;
 
-@EventBusSubscriber(modid = MOD_ID)
 public class ModScreenHandlers {
 
-    public static final DeferredRegister<MenuType<?>> MENUS =
-            DeferredRegister.create(Registries.MENU, SpudaciousShops.MOD_ID);
+    public static final PendingRegistry<MenuType<?>> MENUS =
+            new PendingRegistry<>(BuiltInRegistries.MENU, SpudaciousShops.MOD_ID);
 
 
     public static final Supplier<MenuType<ShopScreenHandlerOwner>> SHOP_SCREEN_HANDLER_OWNER =
             MENUS.register("shop_gui_owner",
-                    () -> IMenuTypeExtension.create(ShopScreenHandlerOwner::create));
+                    () -> new ExtendedMenuType<>(ShopScreenHandlerOwner::create, ShopOpeningData.STREAM_CODEC));
 
     public static final Supplier<MenuType<ShopScreenHandlerCustomer>> SHOP_SCREEN_HANDLER_CUSTOMER =
             MENUS.register("shop_gui_customer",
-                    () -> IMenuTypeExtension.create(ShopScreenHandlerCustomer::create));
+                    () -> new ExtendedMenuType<>(ShopScreenHandlerCustomer::create, ShopOpeningData.STREAM_CODEC));
 
 
 
 
-    public static final Map<Character, ResourceLocation> CURRENCY_IMG_MAP = Map.of(
+    public static final Map<Character, Identifier> CURRENCY_IMG_MAP = Map.of(
             '£', id("textures/gui/currency_textures/gbp.png"),
             '€', id("textures/gui/currency_textures/eur.png"),
             'x', id("textures/gui/contract_slot.png")
     );
 
 
-    public static void registerScreenHandlers(IEventBus modEventBus) {//called by modMain
-        ScreenResources.init();
+    public static void registerScreenHandlers() {//called by modMain
+
         SpudaciousShops.LOGGER.info("Registering screen handlers for " + SpudaciousShops.MOD_ID);
-        MENUS.register(modEventBus);
+        MENUS.registerAll();
     }
 
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent // on the mod event bus only on the physical client
-    public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(SHOP_SCREEN_HANDLER_OWNER.get(), ShopScreenOwner::new);
-        event.register(SHOP_SCREEN_HANDLER_CUSTOMER.get(), ShopScreenCustomer::new);
-    }
 }

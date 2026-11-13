@@ -1,12 +1,12 @@
 package net.spudacious5705.shops.screen;
 
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -104,14 +104,14 @@ public abstract class AShopScreenHandler extends AbstractContainerMenu {
 
         @Override
         public @NotNull Optional<ItemStack> tryRemove(int pCount, int pDecrement, @NotNull Player pPlayer) {
-            if(this.hasItem())attemptTrade(this.getSlotIndex(), pPlayer);
+            if(this.hasItem())attemptTrade(this.getContainerSlot(), pPlayer);
             return Optional.empty();
         }
 
         @NotNull
         @Override
         public ItemStack safeTake(int pCount, int pDecrement, @NotNull Player pPlayer) {
-            if(this.hasItem())attemptTrade(this.getSlotIndex(), pPlayer);
+            if(this.hasItem())attemptTrade(this.getContainerSlot(), pPlayer);
             return ItemStack.EMPTY;
         }
 
@@ -207,9 +207,9 @@ public abstract class AShopScreenHandler extends AbstractContainerMenu {
     protected int[] lockedDownSlots = new int[2];
 
     @Override
-    public void clicked(int pSlotId, int pButton, @NotNull ClickType pClickType, @NotNull Player pPlayer) {
+    public void clicked(int pSlotId, int pButton, @NotNull ContainerInput pContainerInput, @NotNull Player pPlayer) {
         for (int i : lockedDownSlots) if (i == pSlotId) return;
-        super.clicked(pSlotId, pButton, pClickType, pPlayer);
+        super.clicked(pSlotId, pButton, pContainerInput, pPlayer);
     }
 
     protected int monoVendorSlotIndex;
@@ -263,7 +263,7 @@ public abstract class AShopScreenHandler extends AbstractContainerMenu {
         return newStack;
     }
 
-    abstract public ResourceLocation getBackgroundTexture();
+    abstract public Identifier getBackgroundTexture();
 
     @Override
     public boolean stillValid(@NotNull Player player) {
