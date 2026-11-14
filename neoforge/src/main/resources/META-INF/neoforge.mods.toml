@@ -1,0 +1,21 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+[[mods]]
+modId="spudaciousshops"
+version="${version}"
+displayName="Spud's Shops"
+authors="Spudacious5705"
+description="Unofficial multi-loader port of Spud's Shops."
+[[dependencies.spudaciousshops]]
+modId="neoforge"
+type="required"
+versionRange="[26.1.2.126,26.2)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.spudaciousshops]]
+modId="minecraft"
+type="required"
+versionRange="[26.1.2]"
+ordering="NONE"
+side="BOTH"

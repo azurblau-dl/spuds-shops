@@ -28,3 +28,7 @@ forge*changelog.txt
 # Local runtime files
 run-server/
 *.log
+
+**/build/
+**/.gradle/
+.vscode/
