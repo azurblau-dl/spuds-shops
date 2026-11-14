@@ -24,8 +24,11 @@ Use Java 25 and run from the repository root:
 Artifacts are in `fabric/build/libs` and `neoforge/build/libs`. Install only the regular JAR
 for the selected loader, not the `-sources.jar`. Fabric requires Fabric API.
 
-Fabric targets Minecraft 26.1–26.1.2. The first NeoForge candidate targets 26.1.2 with
-NeoForge 26.1.2.126; compatibility with earlier NeoForge/Minecraft versions is not yet claimed.
+Both loader JARs target Minecraft 26.1, 26.1.1 and 26.1.2. Future patches are not
+automatically claimed. The NeoForge JAR is built against 26.1.0.19-beta (Minecraft 26.1).
+The compatibility build matrix also checks 26.1.1.15-beta and 26.1.2.126.
+Use the corresponding NeoForge version for your Minecraft installation. These are
+compile-time compatibility checks; each Minecraft version still needs manual runtime verification.
 
 ## Manual verification
 

@@ -14,17 +14,19 @@ public final class NeoForgeShops {
   bus.addListener(this::register);
   bus.addListener(this::setup);
   bus.addListener(this::network);
-  net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::beforeBreak);
+  breakEvents.register(net.neoforged.neoforge.common.NeoForge.EVENT_BUS, this::beforeBreak);
  }
  private void register(RegisterEvent event) {
   var actions = Platform.REGISTRATIONS.remove(event.getRegistryKey());
   if (actions != null) actions.forEach(Runnable::run);
  }
  private void setup(FMLCommonSetupEvent event) { event.enqueueWork(SpudaciousShops::finishRegistration); }
- private void beforeBreak(net.neoforged.neoforge.event.level.block.BreakBlockEvent event) {
-  if (!(event.getPlayer() instanceof ServerPlayer)) return;
-  if (event.getLevel().getBlockEntity(event.getPos()) instanceof net.spudacious5705.shops.block.entity.AbstractShopEntity shop && shop.isUnbreakable(event.getPlayer())) {
-   event.setCanceled(true); event.setNotifyClient(true); event.getPlayer().sendOverlayMessage(shop.cantBreakMessage());
+ private final net.spudacious5705.shops.platform.BreakEventCompat breakEvents = new net.spudacious5705.shops.platform.BreakEventCompat();
+ private void beforeBreak(net.neoforged.neoforge.event.level.BlockEvent event) {
+  var player = breakEvents.serverPlayer(event);
+  if (player == null) return;
+  if (event.getLevel().getBlockEntity(event.getPos()) instanceof net.spudacious5705.shops.block.entity.AbstractShopEntity shop && shop.isUnbreakable(player)) {
+   breakEvents.cancel(event); player.sendOverlayMessage(shop.cantBreakMessage());
   }
  }
  private void network(RegisterPayloadHandlersEvent event) {

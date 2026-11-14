@@ -2,7 +2,7 @@ plugins {
  id 'java-library'
  id 'net.neoforged.moddev' version '2.0.148'
 }
-base { archivesName = 'spuds-shops-neoforge-26.1.2' }
+base { archivesName = 'spuds-shops-neoforge-26.1.x' }
 repositories { mavenCentral() }
 java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
 neoForge {
@@ -18,7 +18,11 @@ dependencies {
  jarJar('com.electronwill.night-config:toml:[3.6.6,4.0)') { version { prefer '3.6.6' } }
 }
 processResources {
- def properties = [version: project.version.toString()]
+ def properties = [
+  version: project.version.toString(),
+  neo_version_range: project.neo_version_range.toString(),
+  neo_minecraft_version_range: project.neo_minecraft_version_range.toString()
+ ]
  inputs.properties(properties)
  filesMatching('META-INF/neoforge.mods.toml') { expand properties }
 }
